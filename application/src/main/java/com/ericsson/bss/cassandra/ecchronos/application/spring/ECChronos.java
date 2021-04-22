@@ -17,6 +17,9 @@ package com.ericsson.bss.cassandra.ecchronos.application.spring;
 import java.io.Closeable;
 import java.util.Collections;
 
+import com.datastax.driver.core.Cluster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,7 +64,11 @@ public class ECChronos implements Closeable
                 statementDecorator, metricRegistry);
 
         Session session = nativeConnectionProvider.getSession();
-        Metadata metadata = session.getCluster().getMetadata();
+        LOG.debug("XXX Session: {}", session);
+        Cluster cluster = session.getCluster();
+        LOG.debug("XXX Cluster: {}", cluster);
+        Metadata metadata = cluster.getMetadata();
+        logMetadata(metadata);
 
         Config.GlobalRepairConfig repairConfig = configuration.getRepair();
 
@@ -145,4 +152,12 @@ public class ECChronos implements Closeable
 
         myECChronosInternals.close();
     }
+    private static final Logger LOG = LoggerFactory.getLogger(ECChronos.class);
+
+    private static void logMetadata(Metadata m)
+    {
+        LOG.debug("XXX metadata: {}, clusterName:{}, partitioner:{}", m, m.getClusterName(), m.getPartitioner());
+        LOG.debug("XXXXX metadata.getKeyspaces(): {}", m.getKeyspaces());
+        LOG.debug("XXXXX metadata.getAllHosts(): {}", m.getAllHosts());
+        }
 }

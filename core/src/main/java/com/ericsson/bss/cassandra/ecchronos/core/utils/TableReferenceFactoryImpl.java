@@ -18,6 +18,8 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Metadata;
 import com.datastax.driver.core.TableMetadata;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,17 +38,31 @@ public class TableReferenceFactoryImpl implements TableReferenceFactory
     public TableReferenceFactoryImpl(Metadata metadata)
     {
         this.metadata = Preconditions.checkNotNull(metadata, "Metadata must be set");
+        logMetadata(metadata);
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(TableReferenceFactoryImpl.class);
+
+    private static void logMetadata(Metadata m)
+    {
+        LOG.debug("XXX metadata: {}, clusterName:{}, partitioner:{}", m, m.getClusterName(), m.getPartitioner());
+        LOG.debug("XXXXX metadata.getKeyspaces(): {}", m.getKeyspaces());
+        LOG.debug("XXXXX metadata.getAllHosts(): {}", m.getAllHosts());
     }
 
     @Override
     public TableReference forTable(String keyspace, String table)
     {
-        KeyspaceMetadata keyspaceMetadata = metadata.getKeyspace(keyspace);
+        LOG.debug("XXX forTable. keyspace:{}, table:{}", keyspace, table);
+        logMetadata(metadata);
+        KeyspaceMetadata keyspaceMetadata = metadata.getKeyspace(keyspace);  // FÅR NULL HÄR!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        LOG.debug("XXX forTable. keyspaceMetadata:{}", keyspaceMetadata);
         if (keyspaceMetadata == null)
         {
             return null;
         }
         TableMetadata tableMetadata = keyspaceMetadata.getTable(table);
+        LOG.debug("XXX forTable. tableMetadata:{}", tableMetadata);
         if (tableMetadata == null)
         {
             return null;
@@ -54,6 +70,7 @@ public class TableReferenceFactoryImpl implements TableReferenceFactory
         UUID tableId = tableMetadata.getId();
 
         TableReference tableReference = tableReferences.get(tableId);
+        LOG.debug("XXX forTable. tableReference:{}", tableReference);
         if (tableReference == null)
         {
             tableReference = tableReferences.computeIfAbsent(tableId, k -> new UuidTableReference(tableMetadata));

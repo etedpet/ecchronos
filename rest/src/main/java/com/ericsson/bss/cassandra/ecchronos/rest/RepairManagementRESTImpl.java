@@ -23,6 +23,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,7 +64,7 @@ public class RepairManagementRESTImpl implements RepairManagementREST
     private final TableReferenceFactory myTableReferenceFactory;
 
     public RepairManagementRESTImpl(RepairScheduler repairScheduler, OnDemandRepairScheduler demandRepairScheduler,
-            TableReferenceFactory tableReferenceFactory)
+                                    TableReferenceFactory tableReferenceFactory)
     {
         myRepairScheduler = repairScheduler;
         myOnDemandRepairScheduler = demandRepairScheduler;
@@ -159,14 +161,20 @@ public class RepairManagementRESTImpl implements RepairManagementREST
         }
     }
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepairManagementRESTImpl.class);
+
     @Override
     @PostMapping(ENDPOINT_PREFIX + "/schedule/keyspaces/{keyspace}/tables/{table}")
     public String scheduleJob(@PathVariable String keyspace, @PathVariable String table)
     {
+        LOG.debug("XXX scheduleJob. Keyspace:{}, table:{}", keyspace, table);
         RepairJobView repairJobView;
         try
         {
-            repairJobView = myOnDemandRepairScheduler.scheduleJob(myTableReferenceFactory.forTable(keyspace, table));
+            LOG.debug("XXX scheduleJob. myOnDemandRepairScheduler:{}, myTableReferenceFactory:{}", myOnDemandRepairScheduler, myTableReferenceFactory);
+            TableReference tableReference = myTableReferenceFactory.forTable(keyspace, table);
+            LOG.debug("XXX scheduleJob. tableReference:{}", tableReference);
+            repairJobView = myOnDemandRepairScheduler.scheduleJob(tableReference);
         } catch (EcChronosException e)
         {
             throw new ResponseStatusException(NOT_FOUND, "Not Found", e);

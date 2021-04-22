@@ -124,7 +124,8 @@ public class OnDemandRepairSchedulerImpl implements OnDemandRepairScheduler, Clo
         {
             if (tableReference != null)
             {
-                KeyspaceMetadata ks = myMetadata.getKeyspace(tableReference.getKeyspace());
+                LOG.debug("XXX scheduleJob. tableReference:{}, myMetadata:{}, ", tableReference, myMetadata);
+                KeyspaceMetadata ks = myMetadata.getKeyspace(tableReference.getKeyspace()); // NPE - tableReference is null!?!
                 if (ks != null && ks.getTable(tableReference.getTable()) != null)
                 {
                     OnDemandRepairJob job = getRepairJob(tableReference);
